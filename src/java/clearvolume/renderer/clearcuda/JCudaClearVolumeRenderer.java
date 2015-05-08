@@ -286,7 +286,8 @@ public class JCudaClearVolumeRenderer extends ClearGLVolumeRenderer	implements
 		for (int i = 0; i < getNumberOfRenderLayers(); i++)
 		{
 			final long lBufferSize = 4 * getTextureWidth()
-																* getTextureHeight();
+																* getTextureHeight()
+																/ getTextureLODDivisor();
 			assert (mCudaBufferDevicePointer[i] == null);
 
 			if (mCudaBufferDevicePointer[i] != null)
@@ -798,9 +799,9 @@ public class JCudaClearVolumeRenderer extends ClearGLVolumeRenderer	implements
 				pointTransferFunctionTextureToArray(pRenderLayerIndex);
 				pointTextureToArray(pRenderLayerIndex);
 
-				mCurrentRenderKernel.setGridDim(iDivUp(	getTextureWidth(),
+				mCurrentRenderKernel.setGridDim(iDivUp(	getTextureWidth() / getTextureLODDivisor(),
 																								cBlockSize),
-																				iDivUp(	getTextureHeight(),
+																				iDivUp(	getTextureHeight() / getTextureLODDivisor(),
 																								cBlockSize),
 																				1);
 
@@ -827,8 +828,8 @@ public class JCudaClearVolumeRenderer extends ClearGLVolumeRenderer	implements
 																																			: 1;
 
 					mCurrentRenderKernel.launch(lCudaDevicePointer,
-																			getTextureWidth(),
-																			getTextureHeight(),
+																			getTextureWidth() / getTextureLODDivisor(),
+																			getTextureHeight() / getTextureLODDivisor(),
 																			(float) getBrightness(pRenderLayerIndex),
 																			(float) getTransferRangeMin(pRenderLayerIndex),
 																			(float) getTransferRangeMax(pRenderLayerIndex),
@@ -849,8 +850,8 @@ public class JCudaClearVolumeRenderer extends ClearGLVolumeRenderer	implements
 					final float[] lLightVector = getLightVector();
 
 					mCurrentRenderKernel.launch(lCudaDevicePointer,
-																			getTextureWidth(),
-																			getTextureHeight(),
+																			getTextureWidth() / getTextureLODDivisor(),
+																			getTextureHeight() / getTextureLODDivisor(),
 																			(float) getBrightness(pRenderLayerIndex),
 																			(float) getTransferRangeMin(pRenderLayerIndex),
 																			(float) getTransferRangeMax(pRenderLayerIndex),

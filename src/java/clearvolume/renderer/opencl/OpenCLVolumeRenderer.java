@@ -153,7 +153,8 @@ public class OpenCLVolumeRenderer extends ClearGLVolumeRenderer	implements
 	@Override
 	protected void notifyChangeOfTextureDimensions()
 	{
-		final int lRenderBufferSize = getTextureHeight() * getTextureWidth();
+		final int lRenderBufferSize = getTextureHeight() * getTextureWidth()
+																	/ getTextureLODDivisor();
 
 		for (int i = 0; i < getNumberOfRenderLayers(); i++)
 		{
@@ -403,8 +404,8 @@ public class OpenCLVolumeRenderer extends ClearGLVolumeRenderer	implements
 																																		: 1;
 				mCLDevice.setArgs(mCurrentRenderKernel,
 													mCLRenderBuffers[pRenderLayerIndex],
-													getTextureWidth(),
-													getTextureHeight(),
+													getTextureWidth() / getTextureLODDivisor(),
+													getTextureHeight() / getTextureLODDivisor(),
 													(float) getBrightness(pRenderLayerIndex),
 													(float) getTransferRangeMin(pRenderLayerIndex),
 													(float) getTransferRangeMax(pRenderLayerIndex),
@@ -431,8 +432,8 @@ public class OpenCLVolumeRenderer extends ClearGLVolumeRenderer	implements
 
 				mCLDevice.setArgs(mCurrentRenderKernel,
 													mCLRenderBuffers[pRenderLayerIndex],
-													getTextureWidth(),
-													getTextureHeight(),
+													getTextureWidth() / getTextureLODDivisor(),
+													getTextureHeight() / getTextureLODDivisor(),
 													(float) getBrightness(pRenderLayerIndex),
 													(float) getTransferRangeMin(pRenderLayerIndex),
 													(float) getTransferRangeMax(pRenderLayerIndex),
@@ -457,20 +458,20 @@ public class OpenCLVolumeRenderer extends ClearGLVolumeRenderer	implements
 			 */
 
 			mCLDevice.run(mCurrentRenderKernel,
-										getTextureWidth(),
-										getTextureHeight());
+										getTextureWidth() / getTextureLODDivisor(),
+										getTextureHeight() / getTextureLODDivisor());
 
 		}
 		else
 		{
 			mCLDevice.setArgs(mClearKernel,
 												mCLRenderBuffers[pRenderLayerIndex],
-												getTextureWidth(),
-												getTextureHeight());
+												getTextureWidth() / getTextureLODDivisor(),
+												getTextureHeight() / getTextureLODDivisor());
 
 			mCLDevice.run(mClearKernel,
-										getTextureWidth(),
-										getTextureHeight());
+										getTextureWidth() / getTextureLODDivisor(),
+										getTextureHeight() / getTextureLODDivisor());
 
 		}
 

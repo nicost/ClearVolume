@@ -67,13 +67,14 @@ ClearVolumeRendererBase implements ClearGLEventListener
 
 	private static final double cTextureDimensionChangeRatioThreshold = 1.2;
 	private static final long cMaxWaitingTimeForAcquiringDisplayLockInMs = 200;
+	private static final int cNumberOfLOD = 4;
 
 	private static final GLMatrix cOverlay2dProjectionMatrix = GLMatrix.getOrthoProjectionMatrix(	-1,
 																																																1,
 																																																-1,
 																																																1,
 																																																0,
-																																																1000);/**/;
+																																																1000);/**/
 
 	static
 	{
@@ -122,7 +123,7 @@ ClearVolumeRendererBase implements ClearGLEventListener
 
 	// textures width and height:
 	private volatile int mMaxTextureWidth, mMaxTextureHeight,
-			mTextureWidth, mTextureHeight;
+			mTextureWidth, mTextureHeight, mTextureLOD;
 	private volatile boolean mUpdateTextureWidthHeight = true;
 
 	private volatile boolean mRequestDisplay = true;
@@ -483,6 +484,37 @@ ClearVolumeRendererBase implements ClearGLEventListener
 	}
 
 	/**
+	 * Sets the render texture LOD.
+	 *
+	 */
+	@Override
+	public void setXYLOD(int pTextureLOD)
+	{
+		mTextureLOD = pTextureLOD;
+		mUpdateTextureWidthHeight = true;
+	}
+
+	/**
+	 * Returns the render texture LOD.
+	 *
+	 * @return texture LOD
+	 */
+	public int getXYLOD()
+	{
+		return mTextureLOD;
+	}
+
+	/**
+	 * Returns the render texture LOD Divisor. Such as: 1, 2, 4, 8, ...
+	 *
+	 * @return texture LOD
+	 */
+	public int getTextureLODDivisor()
+	{
+		return 1 << mTextureLOD;
+	}
+
+	/**
 	 * Implementation of GLEventListener: Called to initialize the GLAutoDrawable.
 	 * This method will initialize the JCudaDriver and cause the initialization of
 	 * CUDA and the OpenGL PBO.
@@ -617,11 +649,11 @@ ClearVolumeRendererBase implements ClearGLEventListener
 				mLayerTextures[i] = new GLTexture(mGLProgram,
 																					NativeTypeEnum.UnsignedByte,
 																					4,
-																					mTextureWidth,
-																					mTextureHeight,
+																					getTextureWidth(),
+																					getTextureHeight(),
 																					1,
 																					true,
-																					3);
+																					cNumberOfLOD);
 
 			}
 
@@ -1048,8 +1080,8 @@ ClearVolumeRendererBase implements ClearGLEventListener
 		if (lCandidateTextureWidth != 0 && lCandidateTextureHeight == 0)
 			return;
 
-		float lRatioWidth = ((float) mTextureWidth) / lCandidateTextureWidth;
-		float lRatioHeight = ((float) mTextureHeight) / lCandidateTextureHeight;
+		float lRatioWidth = ((float) getTextureWidth()) / lCandidateTextureWidth;
+		float lRatioHeight = ((float) getTextureHeight()) / lCandidateTextureHeight;
 
 		if (lRatioWidth == 0)
 			lRatioWidth = 1 / lRatioWidth;
@@ -1172,7 +1204,6 @@ ClearVolumeRendererBase implements ClearGLEventListener
 	{
 		return mOverlayMap.values();
 	}
-
 
 	/**
 	 * Notifies eye ray listeners.

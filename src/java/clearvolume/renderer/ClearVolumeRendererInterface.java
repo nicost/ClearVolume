@@ -959,6 +959,21 @@ public interface ClearVolumeRendererInterface	extends
 	public void toggleAdaptiveLOD();
 
 	/**
+	 * Sets the XY LOD level.
+	 * 
+	 * @param pTextureLOD
+	 *          XY LOD
+	 */
+	public void setXYLOD(int pTextureLOD);
+
+	/**
+	 * Returns the XY LOD.
+	 * 
+	 * @return XY LOD
+	 */
+	public int getXYLOD();
+
+	/**
 	 * Adds a eye ray listener to this renderer.
 	 *
 	 * @param pEyeRayListener
@@ -988,6 +1003,7 @@ public interface ClearVolumeRendererInterface	extends
 	 */
 	@Override
 	public void close();
+
 
 
 
