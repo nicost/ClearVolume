@@ -10,6 +10,8 @@ public class AdaptiveLODController
 	private static final long cMarginTime = 1000 * 1000 * 100; // 10 ms
 	private static final int cMaxNumberOfPasses = 9;
 
+	private final ClearVolumeRendererInterface mClearVolumeRendererInterface;
+
 	private volatile boolean mActive = true;
 	private volatile boolean mMultiPassRenderingInProgress;
 
@@ -26,10 +28,11 @@ public class AdaptiveLODController
 	private volatile long mTargetTimeHysteresis = 5;
 	private volatile double mFilteredElapsedTimeInMs = mTargetTimeForFirstPassInMilliseconds;
 
-	public AdaptiveLODController()
+	public AdaptiveLODController(ClearVolumeRendererInterface pClearVolumeRendererInterface)
 	{
-		mCurrentNumberOfPasses = 3;
-		mCurrentGenerator = 2;
+		mClearVolumeRendererInterface = pClearVolumeRendererInterface;
+		mCurrentNumberOfPasses = 1;
+		mCurrentGenerator = 1;
 		mNewNumberOfPasses = mCurrentNumberOfPasses;
 		mNewGenerator = mCurrentGenerator;
 		resetMultiPassRendering();
@@ -37,6 +40,11 @@ public class AdaptiveLODController
 
 	public void setActive(boolean pActive)
 	{
+		if (mActive && !pActive && mClearVolumeRendererInterface != null)
+		{
+			mClearVolumeRendererInterface.setXYLOD(0);
+		}
+
 		mActive = pActive;
 	}
 
@@ -47,7 +55,7 @@ public class AdaptiveLODController
 
 	public void toggleActive()
 	{
-		mActive = !mActive;
+		setActive(!isActive());
 	}
 
 	public int getNumberOfPasses()
@@ -175,6 +183,7 @@ public class AdaptiveLODController
 
 	public void afterRendering()
 	{
+
 		if (mPassIndex == 0 && mFirstPassTimingStartTime != Long.MIN_VALUE)
 		{
 			mFirstPassTimingStopTime = System.nanoTime();
@@ -192,17 +201,47 @@ public class AdaptiveLODController
 			if (mFilteredElapsedTimeInMs < mTargetTimeForFirstPassInMilliseconds - mTargetTimeHysteresis)
 			{
 				// too fast
-				decrementNumberOfPasses();
+				if (hasSurfaceRendering())
+				{
+					setNumberOfPasses(0);
+					mClearVolumeRendererInterface.setXYLOD(mClearVolumeRendererInterface.getXYLOD() - 1);
+					System.out.println("!! decreasing XY LOD: " + mClearVolumeRendererInterface.getXYLOD());
+				}
+				else
+				{
+					decrementNumberOfPasses();
+					System.out.println("!! decrement Nb Passes: " + getNumberOfPasses());
+				}
+
 			}
 			else if (mFilteredElapsedTimeInMs > mTargetTimeForFirstPassInMilliseconds + mTargetTimeHysteresis)
 			{
 				// too slow
-				incrementNumberOfPasses();
+
+				if (hasSurfaceRendering())
+				{
+					mClearVolumeRendererInterface.setXYLOD(mClearVolumeRendererInterface.getXYLOD() + 1);
+					setNumberOfPasses(0);
+					System.out.println("!! increasing XY LOD: " + mClearVolumeRendererInterface.getXYLOD());
+				}
+				else
+				{
+					incrementNumberOfPasses();
+					System.out.println("!! increment Nb Passes: " + getNumberOfPasses());
+				}
 			}
 
 			mFirstPassTimingStartTime = Long.MIN_VALUE;
 		}
 
+	}
+
+	private boolean hasSurfaceRendering()
+	{
+		for (int i = 0; i < mClearVolumeRendererInterface.getNumberOfRenderLayers(); i++)
+			if (mClearVolumeRendererInterface.getRenderAlgorithm(i) == RenderAlgorithm.IsoSurface)
+				return true;
+		return false;
 	}
 
 	private boolean proceedWithMultiPass()
@@ -262,12 +301,12 @@ public class AdaptiveLODController
 
 	private void println(String pString)
 	{
-		// System.out.println(pString);
+		System.out.println(pString);
 	}
 
 	private void format(String format, Object... args)
 	{
-		// System.out.format(format, args);
+		System.out.format(format, args);
 	}
 
 }

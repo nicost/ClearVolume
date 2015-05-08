@@ -67,7 +67,7 @@ ClearVolumeRendererBase implements ClearGLEventListener
 
 	private static final double cTextureDimensionChangeRatioThreshold = 1.2;
 	private static final long cMaxWaitingTimeForAcquiringDisplayLockInMs = 200;
-	private static final int cNumberOfLOD = 4;
+	private static final int cMaxNumberOfXYLOD = 2;
 
 	private static final GLMatrix cOverlay2dProjectionMatrix = GLMatrix.getOrthoProjectionMatrix(	-1,
 																																																1,
@@ -88,8 +88,7 @@ ClearVolumeRendererBase implements ClearGLEventListener
 
 	private NewtCanvasAWT mNewtCanvasAWT;
 	private volatile int mLastWindowWidth, mLastWindowHeight;
-	private volatile int mViewportX, mViewportY, mViewportWidth,
-			mViewportHeight;
+	private volatile int mViewportWidth, mViewportHeight;
 
 	// pixelbuffer objects.
 	protected GLPixelBufferObject[] mPixelBufferObjects;
@@ -109,24 +108,19 @@ ClearVolumeRendererBase implements ClearGLEventListener
 	private GLProgram mGLProgram;
 
 	// Shader attributes, uniforms and arrays:
-	private GLAttribute mPositionAttribute;
+	private GLAttribute mPositionAttribute, mTexCoordAttribute;
 	private GLVertexArray mQuadVertexArray;
-	private GLVertexAttributeArray mPositionAttributeArray;
-	private GLUniform mQuadProjectionMatrixUniform;
-	private GLAttribute mTexCoordAttribute;
+	private GLVertexAttributeArray mPositionAttributeArray,
+			mTexCoordAttributeArray;
+	private GLUniform mQuadProjectionMatrixUniform, mLODShaderUniform;
 	private GLUniform[] mTexUnits;
-	private GLVertexAttributeArray mTexCoordAttributeArray;
 
-	private final GLMatrix mBoxModelViewMatrix = new GLMatrix();
-	private final GLMatrix mVolumeViewMatrix = new GLMatrix();
 	private final GLMatrix mQuadProjectionMatrix = new GLMatrix();
 
 	// textures width and height:
 	private volatile int mMaxTextureWidth, mMaxTextureHeight,
-			mTextureWidth, mTextureHeight, mTextureLOD;
+			mTextureWidth, mTextureHeight, mXYLOD = 0;
 	private volatile boolean mUpdateTextureWidthHeight = true;
-
-	private volatile boolean mRequestDisplay = true;
 
 	// Recorder:
 	private final GLVideoRecorder mGLVideoRecorder = new GLVideoRecorder(new File(SystemUtils.USER_HOME,
@@ -488,10 +482,14 @@ ClearVolumeRendererBase implements ClearGLEventListener
 	 *
 	 */
 	@Override
-	public void setXYLOD(int pTextureLOD)
+	public void setXYLOD(int pXYLOD)
 	{
-		mTextureLOD = pTextureLOD;
-		mUpdateTextureWidthHeight = true;
+		final int lNewXYLOD = min(cMaxNumberOfXYLOD - 1, max(0, pXYLOD));
+		if (lNewXYLOD != mXYLOD)
+		{
+			mXYLOD = lNewXYLOD;
+			notifyChangeOfVolumeRenderingParameters();
+		}
 	}
 
 	/**
@@ -499,9 +497,10 @@ ClearVolumeRendererBase implements ClearGLEventListener
 	 *
 	 * @return texture LOD
 	 */
+	@Override
 	public int getXYLOD()
 	{
-		return mTextureLOD;
+		return mXYLOD;
 	}
 
 	/**
@@ -511,7 +510,7 @@ ClearVolumeRendererBase implements ClearGLEventListener
 	 */
 	public int getTextureLODDivisor()
 	{
-		return 1 << mTextureLOD;
+		return 1 << getXYLOD();
 	}
 
 	/**
@@ -550,7 +549,9 @@ ClearVolumeRendererBase implements ClearGLEventListener
 				{
 					final String lStringToInsert1 = String.format("uniform sampler2D texUnit%d; \n//insertpoint1",
 																												i);
-					final String lStringToInsert2 = String.format("tempOutColor = max(tempOutColor,texture(texUnit%d, ftexcoord));\n//insertpoint2",
+
+					// textureLod(texUnit0, ftexcoord, lod);
+					final String lStringToInsert2 = String.format("tempOutColor = max(tempOutColor,textureLOD(texUnit%d, ftexcoord, lod));\n//insertpoint2",
 																												i);
 
 					lFragmentShaderSource = lFragmentShaderSource.replace("//insertpoint1",
@@ -564,13 +565,14 @@ ClearVolumeRendererBase implements ClearGLEventListener
 																						lVertexShaderSource,
 																						lFragmentShaderSource);
 				mQuadProjectionMatrixUniform = mGLProgram.getUniform("projection");
+				mLODShaderUniform = mGLProgram.getUniform("lod");
 				mPositionAttribute = mGLProgram.getAtribute("position");
 				mTexCoordAttribute = mGLProgram.getAtribute("texcoord");
 				mTexUnits = new GLUniform[getNumberOfRenderLayers()];
 				for (int i = 0; i < getNumberOfRenderLayers(); i++)
 				{
 					mTexUnits[i] = mGLProgram.getUniform("texUnit" + i);
-					mTexUnits[i].set(i);
+					mTexUnits[i].setInt(i);
 				}
 
 				mQuadVertexArray = new GLVertexArray(mGLProgram);
@@ -625,6 +627,10 @@ ClearVolumeRendererBase implements ClearGLEventListener
 				}
 			}
 
+			ensureTextureAllocated();
+			for (int i = 0; i < getNumberOfRenderLayers(); i++)
+				mLayerTextures[i].clear();
+
 			/*
 			 * Runnable lDisplayRequestRunnable = new Runnable() {
 			 * 
@@ -653,7 +659,8 @@ ClearVolumeRendererBase implements ClearGLEventListener
 																					getTextureHeight(),
 																					1,
 																					true,
-																					cNumberOfLOD);
+																					cMaxNumberOfXYLOD);
+				mLayerTextures[i].clear();
 
 			}
 
@@ -674,7 +681,10 @@ ClearVolumeRendererBase implements ClearGLEventListener
 																	final ByteBuffer pByteBuffer)
 	{
 		pByteBuffer.rewind();
-		mLayerTextures[pRenderLayerIndex].copyFrom(pByteBuffer);
+		mLayerTextures[pRenderLayerIndex].clear();
+		mLayerTextures[pRenderLayerIndex].copyFrom(	pByteBuffer,
+																								getXYLOD(),
+																								false);
 	}
 
 	public void clearTexture(final int pRenderLayerIndex)
@@ -773,6 +783,7 @@ ClearVolumeRendererBase implements ClearGLEventListener
 				for (int i = 0; i < getNumberOfRenderLayers(); i++)
 					mLayerTextures[i].bind(i);
 
+				mLODShaderUniform.setFloat(getXYLOD());
 				mQuadProjectionMatrixUniform.setFloatMatrix(mQuadProjectionMatrix.getFloatArray(),
 																										false);
 
@@ -1043,8 +1054,6 @@ ClearVolumeRendererBase implements ClearGLEventListener
 	{
 		getAdaptiveLODController().notifyUserInteractionInProgress();
 
-		mViewportX = x;
-		mViewportY = y;
 		mViewportWidth = pWidth;
 		mViewportHeight = pHeight;
 
@@ -1187,7 +1196,7 @@ ClearVolumeRendererBase implements ClearGLEventListener
 	@Override
 	public void requestDisplay()
 	{
-		mRequestDisplay = true;
+		// mRequestDisplay = true;
 		// NOT NEEDED ANYMORE
 		// getAdaptiveLODController().requestDisplay();
 		// notifyChangeOfVolumeRenderingParameters();

@@ -186,7 +186,7 @@ public abstract class ClearVolumeRendererBase	implements
 		if (pNumberOfRenderLayers == 1)
 			mTransferFunctions[0] = TransferFunctions.getDefault();
 
-		mAdaptiveLODController = new AdaptiveLODController();
+		mAdaptiveLODController = new AdaptiveLODController(this);
 
 		mAutoRotationController = new AutoRotationController();
 		mRotationControllerList.add(mAutoRotationController);

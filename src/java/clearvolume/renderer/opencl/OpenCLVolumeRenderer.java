@@ -1,7 +1,5 @@
 package clearvolume.renderer.opencl;
 
-import static java.lang.Math.pow;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -423,8 +421,7 @@ public class OpenCLVolumeRenderer extends ClearGLVolumeRenderer	implements
 				mCurrentRenderKernel = mIsoSurfaceRenderKernel;
 
 				lMaxSteps = (lMaxNumberSteps * (1 + lPassIndex)) / (2 * lNumberOfPasses);
-				lDithering = (float) pow(	getDithering(pRenderLayerIndex) * (1.0f * (lNumberOfPasses - lPassIndex) / lNumberOfPasses),
-																	2);
+				lDithering = 0;/* (float) pow(	getDithering(pRenderLayerIndex) * (1.0f * (lNumberOfPasses - lPassIndex) / lNumberOfPasses),2);/**/
 				lClear = 0;
 				lPhase = 0;
 
