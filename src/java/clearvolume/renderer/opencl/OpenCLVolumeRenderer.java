@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
+import clearvolume.exceptions.VolumeTooBigException;
 import jcuda.CudaException;
 
 import org.bridj.Pointer;
@@ -235,6 +236,14 @@ public class OpenCLVolumeRenderer extends ClearGLVolumeRenderer	implements
 																																						CLImageFormat.ChannelDataType.UNormInt16);
 			else
 				throw new ClearVolumeUnsupportdDataTypeException("Received an unsupported data type: " + getNativeType());
+
+			if(mCLDevice.getContext().getMaxMemAllocSize() < lWidth*lHeight*lDepth*getBytesPerVoxel()) {
+				throw new VolumeTooBigException(
+								"The volume data is too big to fit the rendering device (volume size: " +
+												lWidth*lHeight*lDepth*getBytesPerVoxel()/1024.0/1024.0 + "M, free memory on device: " +
+												mCLDevice.getContext().getMaxMemAllocSize()/1024.0/1024.0 +
+												"M).");
+			}
 
 			fillWithByteBuffer(	mCLVolumeImages[pRenderLayerIndex],
 													lVolumeDataBuffer);
