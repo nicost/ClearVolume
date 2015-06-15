@@ -7,7 +7,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-import clearvolume.exceptions.VolumeTooBigException;
 import jcuda.CudaException;
 
 import org.bridj.Pointer;
@@ -143,15 +142,16 @@ public class OpenCLVolumeRenderer extends ClearGLVolumeRenderer	implements
 
 		final OpenCLDeconvolutionLR lOpenCLDeconvolutionLR = new OpenCLDeconvolutionLR();
 		addProcessor(lOpenCLDeconvolutionLR);
+
+		mCLDevice = new OpenCLDevice();
+		mCLDevice.initCL();
+		mCLDevice.printInfo();
 	}
 
 	@Override
 	protected boolean initVolumeRenderer()
 	{
-		mCLDevice = new OpenCLDevice();
 
-		mCLDevice.initCL();
-		mCLDevice.printInfo();
 		mMaxProjectionRenderKernel = mCLDevice.compileKernel(	OpenCLVolumeRenderer.class.getResource("kernels/VolumeRender.cl"),
 																													"maxproj_render");
 		mClearKernel = mCLDevice.compileKernel(	OpenCLVolumeRenderer.class.getResource("kernels/VolumeRender.cl"),
@@ -236,14 +236,6 @@ public class OpenCLVolumeRenderer extends ClearGLVolumeRenderer	implements
 																																						CLImageFormat.ChannelDataType.UNormInt16);
 			else
 				throw new ClearVolumeUnsupportdDataTypeException("Received an unsupported data type: " + getNativeType());
-
-			if(mCLDevice.getContext().getMaxMemAllocSize() < lWidth*lHeight*lDepth*getBytesPerVoxel()) {
-				throw new VolumeTooBigException(
-								"The volume data is too big to fit the rendering device (volume size: " +
-												lWidth*lHeight*lDepth*getBytesPerVoxel()/1024.0/1024.0 + "M, free memory on device: " +
-												mCLDevice.getContext().getMaxMemAllocSize()/1024.0/1024.0 +
-												"M).");
-			}
 
 			fillWithByteBuffer(	mCLVolumeImages[pRenderLayerIndex],
 													lVolumeDataBuffer);
@@ -581,6 +573,30 @@ public class OpenCLVolumeRenderer extends ClearGLVolumeRenderer	implements
 				mDisplayReentrantLock.unlock();
 		}
 
+	}
+
+	@Override
+	public long getMax3DBufferSize()
+	{
+		return mCLDevice.getGlobalMemSize();
+	}
+
+	@Override
+	public long getMaxVolumeWidth()
+	{
+		return mCLDevice.getMaxVolumeWidth();
+	}
+
+	@Override
+	public long getMaxVolumeHeight()
+	{
+		return mCLDevice.getMaxVolumeHeight();
+	}
+
+	@Override
+	public long getMaxVolumeDepth()
+	{
+		return mCLDevice.getMaxVolumeDepth();
 	}
 
 }

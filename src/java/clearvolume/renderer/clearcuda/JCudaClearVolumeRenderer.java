@@ -20,7 +20,6 @@ import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import clearvolume.exceptions.VolumeTooBigException;
 import jcuda.CudaException;
 import jcuda.Pointer;
 import jcuda.driver.CUaddress_mode;
@@ -445,15 +444,6 @@ public class JCudaClearVolumeRenderer extends ClearGLVolumeRenderer	implements
 			if (!lConsistent)
 				throw new RuntimeException("Buffer size not consistent with sizes!");
 			assert (lConsistent);
-
-			if(mCudaDevice.getAvailableMem() < lSizeInBytes) {
-				throw new VolumeTooBigException(
-											"The volume data is too big to fit the rendering device (volume size: " +
-											lSizeInBytes/1024.0/1024.0 + ", free memory on device: " +
-											mCudaDevice.getAvailableMem()/1024.0/1024.0 +
-											").");
-			}
-
 
 			assert (mVolumeDataCudaArrays[pRenderLayerIndex] == null);
 			mVolumeDataCudaArrays[pRenderLayerIndex] = new CudaArray(	1,
@@ -995,5 +985,29 @@ public class JCudaClearVolumeRenderer extends ClearGLVolumeRenderer	implements
 	public void close()
 	{
 		super.close();
+	}
+
+	@Override
+	public long getMax3DBufferSize()
+	{
+		return mCudaDevice.getAvailableMem();
+	}
+
+	@Override
+	public long getMaxVolumeWidth()
+	{
+		return mCudaDevice.getMaxTexture3DWidth();
+	}
+
+	@Override
+	public long getMaxVolumeHeight()
+	{
+		return mCudaDevice.getMaxTexture3DHeight();
+	}
+
+	@Override
+	public long getMaxVolumeDepth()
+	{
+		return mCudaDevice.getMaxTexture3DDepth();
 	}
 }

@@ -865,4 +865,24 @@ public class OpenCLDevice implements ClearVolumeCloseable
 		}
 	}
 
+	public long getGlobalMemSize()
+	{
+		return mCLDevice.getGlobalMemSize();
+	}
+
+	public long getMaxVolumeWidth()
+	{
+		return mCLDevice.getImage3DMaxWidth();
+	}
+
+	public long getMaxVolumeHeight()
+	{
+		return mCLDevice.getImage3DMaxHeight();
+	}
+
+	public long getMaxVolumeDepth()
+	{
+		return mCLDevice.getImage3DMaxDepth();
+	}
+
 }

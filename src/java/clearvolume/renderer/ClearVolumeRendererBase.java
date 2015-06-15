@@ -20,6 +20,7 @@ import javax.swing.SwingUtilities;
 import clearvolume.ClearVolumeCloseable;
 import clearvolume.controller.AutoRotationController;
 import clearvolume.controller.RotationControllerInterface;
+import clearvolume.exceptions.VolumeTooBigException;
 import clearvolume.renderer.listeners.EyeRayListener;
 import clearvolume.renderer.listeners.ParameterChangeListener;
 import clearvolume.renderer.listeners.VolumeCaptureListener;
@@ -1784,6 +1785,29 @@ public abstract class ClearVolumeRendererBase	implements
 	{
 		synchronized (getSetVolumeDataBufferLock(pRenderLayerIndex))
 		{
+			final long lSizeInBytes = pFragmentedMemoryInterface.getSizeInBytes();
+			if (getMax3DBufferSize() < lSizeInBytes)
+			{
+				throw new VolumeTooBigException("The volume data is too big to fit the rendering device (volume size: " + lSizeInBytes
+																				/ 1024.0
+																				/ 1024.0
+																				+ " MB, free memory on device: "
+																				+ getMax3DBufferSize()
+																				/ 1024.0
+																				/ 1024.0
+																				+ ").");
+			}
+			else if (pVolumeSizeX > getMaxVolumeWidth() || pVolumeSizeY > getMaxVolumeHeight()
+								|| pVolumeSizeZ > getMaxVolumeDepth())
+			{
+				throw new VolumeTooBigException(String.format("The volume dimensions are too big to fit the rendering device (volume dimensions: (%d,%d,%d), max supported dimensions by your device: (%d,%d,%d)) ",
+																											pVolumeSizeX,
+																											pVolumeSizeY,
+																											pVolumeSizeZ,
+																											getMaxVolumeWidth(),
+																											getMaxVolumeHeight(),
+																											getMaxVolumeDepth()));
+			}
 
 			if (mVolumeSizeX != pVolumeSizeX || mVolumeSizeY != pVolumeSizeY
 					|| mVolumeSizeZ != pVolumeSizeZ)
@@ -1815,6 +1839,18 @@ public abstract class ClearVolumeRendererBase	implements
 
 		return lWaitResult;
 	}
+
+	@Override
+	public abstract long getMaxVolumeWidth();
+
+	@Override
+	public abstract long getMaxVolumeHeight();
+
+	@Override
+	public abstract long getMaxVolumeDepth();
+
+	@Override
+	public abstract long getMax3DBufferSize();
 
 	@Override
 	public VolumeManager createCompatibleVolumeManager(final int pMaxAvailableVolumes)

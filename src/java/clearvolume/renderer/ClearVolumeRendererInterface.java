@@ -755,6 +755,28 @@ public interface ClearVolumeRendererInterface	extends
 	public boolean setVolumeDataBuffer(	int pRenderLayerIndex,
 																			Volume pVolume);
 
+
+	/**
+	 * Returns max volume width supported by this renderer.
+	 * 
+	 * @return volume width in voxels
+	 */
+	long getMaxVolumeWidth();
+
+	/**
+	 * Returns max volume height supported by this renderer.
+	 * 
+	 * @return volume height in voxels
+	 */
+	long getMaxVolumeHeight();
+
+	/**
+	 * Returns max volume depth supported by this renderer.
+	 * 
+	 * @return volume depth in voxels
+	 */
+	long getMaxVolumeDepth();
+
 	/**
 	 * Creates a compatible VolumeManager - possibly capable of allocating pinned
 	 * memory or memory optimised in other ways. pMaxAvailableVolumes is the
@@ -797,6 +819,12 @@ public interface ClearVolumeRendererInterface	extends
 	public boolean waitToFinishDataBufferCopy(final int pRenderLayerIndex,
 																						long pTimeOut,
 																						TimeUnit pTimeUnit);
+
+
+	/**
+	 * @return available memory in bytes;
+	 */
+	long getMax3DBufferSize();
 
 	/**
 	 * Resets rotation and translation parameters.
@@ -1102,5 +1130,7 @@ public interface ClearVolumeRendererInterface	extends
 	 */
 	@Override
 	public void close();
+
+
 
 }
