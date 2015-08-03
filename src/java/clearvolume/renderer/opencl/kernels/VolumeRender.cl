@@ -208,18 +208,28 @@ maxproj_render(								__global uint	*d_output,
   // precompute vectors: 
   const float4 vecstep = 0.5f*tstep*direc;
   float4 pos = orig*0.5f+0.5f + tnear*0.5f*direc;
+  float4 start = pos;
 
   // Loop unrolling setup: 
   const int unrolledmaxsteps = (maxsteps/LOOPUNROLL);
   
   // raycasting loop:
   float maxp = 0.0f;
-	for(int i=0; i<unrolledmaxsteps; i++) 
+  float4 encpos = (float4)(0.0f, 0.0f, 0.0f, 0.0f);
+  int encounter = 0;
+
+	for(int i=0; i<unrolledmaxsteps; i++)
 	{
 		for(int j=1; j<LOOPUNROLL; j++)
 		{
-	  	maxp = fmax(maxp,read_imagef(volume, volumeSampler, pos).x);
-	  	pos+=vecstep;
+	    	maxp = fmax(maxp, read_imagef(volume, volumeSampler, pos).x);
+
+	    	if(!encounter && maxp > gamma) {
+	    	  encpos = pos-start;
+	    	  encounter = 1;
+	    	}
+
+	    	pos += vecstep;
 		}
 	}
 	
@@ -228,12 +238,23 @@ maxproj_render(								__global uint	*d_output,
 
 	// lookup in transfer function texture:
   const float4 color = brightness*read_imagef(transferColor4,transferSampler, (float2)(mappedVal,0.0f));
-  
-  // Alpha pre-multiply:
-  color.x = color.x*color.w;
-  color.y = color.y*color.w;
-  color.z = color.z*color.w;
-  
+
+  unsigned int ambocconly = 0;
+  float depth = 1.0f-length(encpos);
+
+  if(!ambocconly) {
+    // Alpha pre-multiply:
+    color.x = color.x*color.w*depth;
+    color.y = color.y*color.w*depth;
+    color.z = color.z*color.w*depth;
+  } else {
+    color.x = depth;
+    color.y = depth;
+    color.z = depth;
+  }
+  //printf("orig is %v4hlf\n", orig);
+  //printf("depth is %f\n", depth);
+
   // write output color:
   d_output[x + y*imageW] = rgbaFloatToIntAndMax(clear*d_output[x + y*imageW],color); //d_output[x + y*imageW]
 
