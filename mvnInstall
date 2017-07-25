@@ -1,0 +1,1 @@
+mvn deploy:deploy-file -Dfile=build/libs/ClearVolume-1.0-SNAPSHOT.jar -Dsources=build/libs/ClearVolume-1.0-SNAPSHOT-sources.jar -Djavadoc=build/libs/ClearVolume-1.0-SNAPSHOT-javadoc.jar -DgroupId=net.clearvolume -DartifactId=ClearVolume -Dversion=1.0-MMSNAPSHOT -Dpackaging=jar -Durl=file:/Volumes/nstuurman/public_html/maven -DrepositoryId=in-project
