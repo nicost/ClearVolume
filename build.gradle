@@ -510,7 +510,7 @@ group = 'net.clearvolume'
 if(project.hasProperty('releasebuild')) {
     version = getVersionName()
 } else {
-    version = "1.0-SNAPSHOT"
+    version = "1.0-MM-SNAPSHOT"
 }
 
 artifacts

@@ -1,1 +1,12 @@
-mvn deploy:deploy-file -Dfile=build/libs/ClearVolume-1.0-SNAPSHOT.jar -Dsources=build/libs/ClearVolume-1.0-SNAPSHOT-sources.jar -Djavadoc=build/libs/ClearVolume-1.0-SNAPSHOT-javadoc.jar -DgroupId=net.clearvolume -DartifactId=ClearVolume -Dversion=1.0-MMSNAPSHOT -Dpackaging=jar -Durl=file:/Volumes/nstuurman/public_html/maven -DrepositoryId=in-project
+gradle clean jar javadoc generatePomFileForMavenPublication assemble
+mvn org.apache.maven.plugins:maven-deploy-plugin:2.8.2:deploy-file \
+  -DpomFile=build/publications/maven/pom-default.xml \
+  -Dfile=build/libs/ClearVolume-1.0-MM-SNAPSHOT.jar \
+  -Dsources=build/libs/ClearVolume-1.0-MM-SNAPSHOT-sources.jar \
+  -Djavadoc=build/libs/ClearVolume-1.0-MM-SNAPSHOT-javadoc.jar \
+  -DgroupId=net.clearvolume \
+  -DartifactId=clearvolume \
+  -Dversion=1.0-MM-SNAPSHOT \
+  -Dpackaging=jar \
+  -Durl=file:/Volumes/nstuurman/public_html/maven \
+  -DrepositoryId=in-project
