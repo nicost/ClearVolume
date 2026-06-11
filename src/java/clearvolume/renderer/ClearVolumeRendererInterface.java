@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.jogamp.newt.awt.NewtCanvasAWT;
-import com.jogamp.opengl.math.Quaternion;
+import com.jogamp.math.Quaternion;
 
 import clearvolume.ClearVolumeCloseable;
 import clearvolume.controller.AutoRotationController;
