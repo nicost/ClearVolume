@@ -1,6 +1,6 @@
 package clearvolume.controller;
 
-import com.jogamp.opengl.math.Quaternion;
+import com.jogamp.math.Quaternion;
 
 /**
  * Class RotationControllerInterface

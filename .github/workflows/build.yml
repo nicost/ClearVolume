@@ -3,33 +3,28 @@ name: build
 on:
   push:
     branches:
-      - master
+      - main
     tags:
       - "*-[0-9]+.*"
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
-          java-version: '8'
+          java-version: '11'
           distribution: 'zulu'
-          cache: 'gradle'
-      - name: Set up CI environment
-        run: .github/setup.sh
-      - name: Execute the build
-        run: .github/build.sh
-        env:
-          GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
-          OSSRH_PASS: ${{ secrets.OSSRH_PASS }}
-          SIGNING_ASC: ${{ secrets.SIGNING_ASC }}
+          cache: 'maven'
+      - name: Build and run headless tests
+        # The compiler targets Java 8 bytecode (maven.compiler.release=8 in
+        # pom.xml) so the artifact loads in Fiji's runtime. The Surefire
+        # config in pom.xml excludes tests that open OpenGL/OpenCL/NEWT
+        # windows or wait on the network, so only headless tests run here.
+        run: mvn -B --no-transfer-progress -Djava.awt.headless=true verify

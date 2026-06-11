@@ -23,7 +23,7 @@ import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2ES3;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLProfile;
-import com.jogamp.opengl.math.Quaternion;
+import com.jogamp.math.Quaternion;
 
 import cleargl.ClearGLEventListener;
 import cleargl.ClearGLWindow;

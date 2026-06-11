@@ -15,7 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.SwingUtilities;
 
-import com.jogamp.opengl.math.Quaternion;
+import com.jogamp.math.Quaternion;
 
 import clearvolume.ClearVolumeCloseable;
 import clearvolume.controller.AutoRotationController;
