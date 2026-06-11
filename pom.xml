@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>40.0.0</version>
+		<version>44.0.0</version>
 		<relativePath />
 	</parent>
 
@@ -133,6 +133,11 @@
 		</dependency>
 
 		<dependency>
+			<groupId>net.coremem</groupId>
+			<artifactId>coremem</artifactId>
+			<version>${coremem.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>net.clearvolume</groupId>
 			<artifactId>clearcl</artifactId>
 			<version>${clearcl.version}</version>
@@ -162,12 +167,12 @@
 		</dependency>
 	</dependencies>
 
-	<build>
-		<sourceDirectory>${project.basedir}/src/java</sourceDirectory>
-		<testSourceDirectory>${project.basedir}/src/java</testSourceDirectory>
+    <build>
+    <sourceDirectory>${project.basedir}/src/java</sourceDirectory>
+    <testSourceDirectory>${project.basedir}/src/java</testSourceDirectory>
     <resources>
       <resource>
-				<directory>${project.basedir}/src/java</directory>
+        <directory>${project.basedir}/src/java</directory>
         <excludes>
           <exclude>**/*.java</exclude>
           <exclude>**/package.html</exclude>
@@ -176,7 +181,7 @@
     </resources>
     <testResources>
       <testResource>
-				<directory>${project.basedir}/src/java</directory>
+	<directory>${project.basedir}/src/java</directory>
         <excludes>
           <exclude>**/*.java</exclude>
           <exclude>**/package.html</exclude>
